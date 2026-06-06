@@ -1,0 +1,9 @@
+[DOCTORS]
+usr_name,usr_pwd,doc_name,doc_specialty
+"manu","manu123","Manuel Pérez","General"
+"cris","cris123","Cristina Fernández","Endodoncia"
+"sofi","sofi123","Sofía Sánchez","Ortodoncia"
+[PATIENTS]
+usr_name,usr_pwd,pat_name,pat_phone,pat_status
+"alejo","alejo123","Alejandro Martínez","123456789","active"
+[MEDICAL_CENTRES]
