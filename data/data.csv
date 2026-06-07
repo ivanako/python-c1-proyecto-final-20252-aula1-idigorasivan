@@ -6,4 +6,8 @@ usr_name,usr_pwd,doc_name,doc_specialty
 [PATIENTS]
 usr_name,usr_pwd,pat_name,pat_phone,pat_status
 "alejo","alejo123","Alejandro Martínez","123456789","active"
-[MEDICAL_CENTRES]
+[MEDICAL-CENTRES]
+mdc_alias,mdc_name,mdc_address
+"hup","Hospital Universitario de la Princesa","Calle Diego de León 62"
+"hso","Hospital Universitario Severo Ochoa","Avenida Orellana s/n"
+"hgu","Hospital Central Gómez Ulla","Glorieta del Ejército 1"

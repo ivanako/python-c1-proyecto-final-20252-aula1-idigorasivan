@@ -110,6 +110,11 @@ def load_data(section:str, df:pd.DataFrame, jwt:str):
 
     pass
 
+
+def create_appointment():
+    pass
+
+
 if __name__ == "__main__":
     
     app_jwt = login_app()
