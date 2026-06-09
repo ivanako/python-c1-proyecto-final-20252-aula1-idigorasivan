@@ -10,7 +10,7 @@ pybikes
 PyJWT
 pymongo
 pytest
-python‑dotenv
+python-dotenv
 requests
 responses
 scipy
