@@ -90,6 +90,7 @@ def load_data(section:str, df:pd.DataFrame, jwt:str):
         Loads data into the application using the corresponding API endpoint for each section. The JWT is used for authentication.
     """
     dic_sections={
+        "users": os.getenv("API_USERS"),
         "doctors": os.getenv("API_DOCTORS"),
         "patients": os.getenv("API_PATIENTS"),
         "medical-centres": os.getenv("API_MEDICAL_CENTRES"),
@@ -106,10 +107,10 @@ def load_data(section:str, df:pd.DataFrame, jwt:str):
 
     for _, df_row in df.iterrows():
         try:
-            req_response = req_session.post(req_url, json=df_row.to_dict(), headers=req_headers)
+            req_response = req_session.post(url=req_url, json=df_row.to_dict(), headers=req_headers)
             req_response.raise_for_status()
 
-            # logging.info(f"Data loaded successfully for '{section}': {df_row.to_dict()}")
+            logging.info(f"Data loaded successfully for '{section}': {df_row.to_dict()}")
 
         except requests.exceptions.HTTPError as ex_http:
             logging.error(f"Error loading data for section '{section}': {ex_http}")
@@ -207,14 +208,14 @@ def select_patient(jwt: str) -> tuple[int | None, str | None]:
 
     req_session = requests.Session()
 
-    req_url = os.getenv("API_URL") + os.getenv("API_PATIENTS")
+    req_url = os.getenv("API_URL") + os.getenv("API_PATIENTS_ACTIVE")
 
     req_headers = {
         "Authorization": f"Bearer {jwt}"
     }
 
     try:
-        req_response = req_session.get(req_url, headers=req_headers)
+        req_response = req_session.get(url=req_url, headers=req_headers)
         req_response.raise_for_status()
 
         list_patients = req_response.json()
@@ -353,11 +354,19 @@ def check_medical_centre(list_medical_centres: list[dict]) -> int:
 
 
 def schedule_appointment(jwt: str):
+    """
+        Schedule an appointment by selecting a doctor, patient, medical centre, date, reason and status
+    
+        parameters:
+            jwt (str): The JWT for authentication
+    """
     input("Press Enter to schedule an appointment...")
 
     doc_id, doc_name = select_doctor(jwt)
     pat_id, pat_name = select_patient(jwt)
     mdc_id, mdc_name = select_medical_centre(jwt)
+
+    # apm_date = check_appointment_date()
 
     apm_date = check_appointment_date()
 
@@ -464,7 +473,7 @@ def check_appointment_date_by_doctor(jwt: str, doc_id: int, apm_date: datetime) 
 
             break
         except requests.exceptions.HTTPError as ex_http:
-            logging.error(f"Error fetching Medical Centre list: {ex_http}")
+            logging.error(f"Error fetching Appointments by doctor list: {ex_http}")
 
     if not is_valid_date_doctor:
         logging.error("The selected doctor has already an appointment at the selected date and time after 3 attempts. Please, restart application and try again")

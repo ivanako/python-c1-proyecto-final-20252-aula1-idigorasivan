@@ -14,6 +14,9 @@ from odontocare.admin.auth import jwt_required
 bp_users = Blueprint("admin", __name__, url_prefix="/admin/")
 
 
+#####################################
+########## USERS ##########
+#####################################
 @bp_users.get("/users")
 @jwt_required()
 def list_users(payload) -> tuple[jsonify, int]:
@@ -30,26 +33,34 @@ def create_user(payload):
     try:
         db.session.add(usr_db)
         db.session.commit()
-    except IntegrityError as e:
+    except IntegrityError as ex_integrity:
         db.session.rollback()
-        return jsonify({"error": "Duplicate user"}), 409
+
+        if hasattr(ex_integrity, "orig"):
+            return jsonify({"error": ex_integrity.orig.args[0]}), 409
+        else:
+            return jsonify({"error": str(ex_integrity)}), 409
 
     return jsonify(usr_db.to_dict()), 201
 
-@bp_users.get("/users/<usr_id>")
+@bp_users.get("/users/<int:usr_id>")
 @jwt_required()
 def get_user_by_id(payload, usr_id):
     usr_db = User.query.get_or_404(usr_id)
     return jsonify(usr_db.to_dict()), 200
 
-@bp_users.get("/users/<usr_name>")
+@bp_users.get("/users/<string:usr_name>")
 @jwt_required()
 def get_user_by_username(payload, usr_name):
-    usr_db = User.query.filter_by(usr_name=usr_name).first_or_404()
-    return jsonify(usr_db.to_dict()), 200
+    usr_db = User.query.filter_by(usr_name=usr_name).first()
 
-@bp_users.put("/users/<usr_id>")
-@jwt_required()
+    if usr_db:
+        return jsonify(usr_db.to_dict()), 200
+    else:
+        return jsonify({"error": f"User with name {usr_name} not found"}), 404
+
+@bp_users.put("/users/<int:usr_id>")
+@jwt_required(roles=["admin"])
 def update_user(payload, usr_id):
     usr_db = User.query.get(usr_id)
     
@@ -65,8 +76,8 @@ def update_user(payload, usr_id):
 
     return jsonify(usr_db.to_dict()), 200
 
-@bp_users.delete("/users/<usr_id>")
-@jwt_required()
+@bp_users.delete("/users/<int:usr_id>")
+@jwt_required(roles=["admin"])
 def delete_user(payload, usr_id):
     usr_db = User.query.get(usr_id)
 
@@ -101,9 +112,13 @@ def create_doctor(payload):
         
             doc_db = Doctor(usr_id=usr_db.usr_id, doc_name=doc_json.get("doc_name"), doc_specialty=doc_json.get("doc_specialty"))
             db.session.add(doc_db)
-    except IntegrityError as e:
+    except IntegrityError as ex_integrity:
         db.session.rollback()
-        return jsonify({"error": "Duplicate doctor"}), 409
+
+        if hasattr(ex_integrity, "orig"):
+            return jsonify({"error": ex_integrity.orig.args[0]}), 409
+        else:
+            return jsonify({"error": str(ex_integrity)}), 409
 
     return jsonify(doc_db.to_dict()), 201
 
@@ -123,6 +138,12 @@ def list_patients(payload) -> tuple[jsonify, int]:
     pat_list = Patient.query.all()
     return jsonify([pat.to_dict() for pat in pat_list]), 200
 
+@bp_users.get("/patients/active")
+@jwt_required()
+def list_active_patients(payload) -> tuple[jsonify, int]:
+    pat_list = Patient.query.filter_by(pat_active=True).all()
+    return jsonify([pat.to_dict() for pat in pat_list]), 200
+
 @bp_users.post("/patients")
 @jwt_required(roles=["admin"])
 def create_patient(payload):
@@ -134,15 +155,19 @@ def create_patient(payload):
             db.session.add(usr_db)
             db.session.flush()  # Ensure usr_db.usr_id is populated before using it in the Patient record
 
-            pat_db = Patient(usr_id=usr_db.usr_id, pat_name=pat_json.get("pat_name"), pat_phone=pat_json.get("pat_phone"), pat_status=pat_json.get("pat_status"))
+            pat_db = Patient(usr_id=usr_db.usr_id, pat_name=pat_json.get("pat_name"), pat_phone=pat_json.get("pat_phone"), pat_active=pat_json.get("pat_active"))
             db.session.add(pat_db)
-    except IntegrityError as e:
+    except IntegrityError as ex_integrity:
         db.session.rollback()
-        return jsonify({"error": "Duplicate patient"}), 409
+
+        if hasattr(ex_integrity, "orig"):
+            return jsonify({"error": ex_integrity.orig.args[0]}), 409
+        else:
+            return jsonify({"error": str(ex_integrity)}), 409
 
     return jsonify(pat_db.to_dict()), 201
 
-@bp_users.get("/patients/<pat_id>")
+@bp_users.get("/patients/<int:pat_id>")
 @jwt_required()
 def get_patient(payload, pat_id):
     pat_db = Patient.query.get_or_404(pat_id)
@@ -158,6 +183,20 @@ def list_medical_centres(payload) -> tuple[jsonify, int]:
     mdc_list = MedicalCentre.query.all()
     return jsonify([mdc.to_dict() for mdc in mdc_list]), 200
 
+@bp_users.get("/medical-centres/<int:mdc_id>")
+@jwt_required()
+def get_medical_centre_by_id(payload, mdc_id):
+    mdc_db = MedicalCentre.query.get_or_404(mdc_id)
+    return jsonify(mdc_db.to_dict()), 200
+
+@bp_users.get("/medical-centres/<string:mdc_alias>")
+@jwt_required()
+def get_medical_centre_by_alias(payload, mdc_alias):
+    # mdc_db = MedicalCentre.query.get_or_404(mdc_alias)
+    mdc_db = MedicalCentre.query.filter_by(mdc_alias=mdc_alias).first()
+
+    return jsonify(mdc_db.to_dict()), 200
+
 @bp_users.post("/medical-centres")
 @jwt_required(roles=["admin"])
 def create_medical_centre(payload):
@@ -168,14 +207,12 @@ def create_medical_centre(payload):
     
         db.session.add(mdc_db)
         db.session.commit()
-    except IntegrityError as e:
+    except IntegrityError as ex_integrity:
         db.session.rollback()
-        return jsonify({"error": "Duplicate medical centre"}), 409
+
+        if hasattr(ex_integrity, "orig"):
+            return jsonify({"error": ex_integrity.orig.args[0]}), 409
+        else:
+            return jsonify({"error": str(ex_integrity)}), 409
 
     return jsonify(mdc_db.to_dict()), 201
-
-@bp_users.get("/medical-centres/<mdc_id>")
-@jwt_required()
-def get_medical_centre(payload, mdc_id):
-    mdc_db = MedicalCentre.query.get_or_404(mdc_id)
-    return jsonify(mdc_db.to_dict()), 200

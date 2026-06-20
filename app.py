@@ -1,8 +1,11 @@
+from dbm import sqlite3
 import os
+import secrets
 
 from flask import Flask
 from dotenv import load_dotenv
-from sqlalchemy import StaticPool
+from sqlalchemy import Engine, StaticPool, event
+import sqlite3
 
 from odontocare.admin.bp_admin import bp_users
 from odontocare.admin.auth import bp_auth
@@ -10,12 +13,21 @@ from odontocare.appointments.bp_appointments import bp_appointments
 
 from db_init import db
 
-load_dotenv()
+# load_dotenv()
 
 def create_app():
     """
         Initialise Flask application and its database
     """
+
+    # Activate foreign key for SQLite
+    @event.listens_for(Engine, "connect")
+    def set_sqlite_pragma(dbapi_connection, connection_record):
+        if isinstance(dbapi_connection, sqlite3.Connection):
+            cursor = dbapi_connection.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON;")
+            cursor.close()
+        
     app = Flask("OdontoCare")
 
     # Configure SQLite in-memory database
@@ -25,8 +37,9 @@ def create_app():
         "connect_args": {"check_same_thread": False},
         "poolclass": StaticPool
     }
+    app.config["JWT_SECRET_KEY"] = secrets.token_hex(32)
     
-    # Initialise Flask app and its database
+    # Initialise Flask app
     db.init_app(app)
 
     with app.app_context():

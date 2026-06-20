@@ -1,13 +1,19 @@
+[USERS]
+usr_name,usr_pwd,usr_role
+"andres","andres123","reception"
+"ana","ana123","admin"
 [DOCTORS]
 usr_name,usr_pwd,doc_name,doc_specialty
 "manu","manu123","Manuel Pérez","General"
 "cris","cris123","Cristina Fernández","Endodoncia"
 "sofi","sofi123","Sofía Sánchez","Ortodoncia"
 [PATIENTS]
-usr_name,usr_pwd,pat_name,pat_phone,pat_status
-"alejo","alejo123","Alejandro Martínez","123456789","active"
+usr_name,usr_pwd,pat_name,pat_phone,pat_active
+"alex","alex123","Alejandro Martínez","123456789",True
+"susan","susan123","Susana Hernández","987654321",True
+"marc","marc123","Marcos Sánchez","789456123",False
 [MEDICAL-CENTRES]
 mdc_alias,mdc_name,mdc_address
-"hup","Hospital Universitario de la Princesa","Calle Diego de León 62"
-"hso","Hospital Universitario Severo Ochoa","Avenida Orellana s/n"
-"hgu","Hospital Central Gómez Ulla","Glorieta del Ejército 1"
+"hup","Hospital Universitario de la Princesa","Calle Diego de León, 62"
+"hso","Hospital Universitario Severo Ochoa","Avenida Orellana, s/n"
+"hgu","Hospital Central Gómez Ulla","Glorieta del Ejército, 1"

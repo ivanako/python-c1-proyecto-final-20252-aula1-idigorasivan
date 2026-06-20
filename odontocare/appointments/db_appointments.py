@@ -1,7 +1,12 @@
 from db_init import db
 
 class Appointment(db.Model):
+    """
+    Appointment model for the application
+    """
+
     __tablename__ = "appointments"
+
     __table_args__ = (
         db.UniqueConstraint('doc_id', 'apm_date', name='ix_apm_doc_date'),
     )
@@ -15,8 +20,10 @@ class Appointment(db.Model):
     apm_date = db.Column(db.DateTime, nullable=False)
     apm_status = db.Column(db.String(200), nullable=False)
 
-    apm_users = db.relationship("User", back_populates="usr_appointments", uselist=False)
-    apm_doctors = db.relationship("Doctor", back_populates="doc_appointments", uselist=False)
+    apm_users = db.relationship("User", back_populates="usr_appointments")
+    apm_doctor = db.relationship("Doctor", back_populates="doc_appointments")
+    apm_patient = db.relationship("Patient", back_populates="pat_appointments")
+    apm_medical_centre = db.relationship("MedicalCentre", back_populates="mdc_appointments")
 
     def to_dict(self):
-        return {"apm_id": self.apm_id, "usr_id": self.usr_id, "pat_id": self.pat_id, "doc_id": self.doc_id, "mdc_id": self.mdc_id, "apm_date": self.apm_date, "apm_reason": self.apm_reason, "apm_status": self.apm_status}
+        return {"apm_id": self.apm_id, "usr_id": self.usr_id, "apm_date": self.apm_date, "apm_reason": self.apm_reason, "apm_status": self.apm_status, "doctor": self.apm_doctor.to_dict() if self.apm_doctor else None, "patient": self.apm_patient.to_dict() if self.apm_patient else None, "medical_centre": self.apm_medical_centre.to_dict() if self.apm_medical_centre else None}
